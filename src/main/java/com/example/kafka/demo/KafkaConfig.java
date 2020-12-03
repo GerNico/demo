@@ -42,6 +42,12 @@ public class KafkaConfig {
 	private String numPartitions;
 	@Value(value = "${kafka.topic.replicationFactor}")
 	private String replicationFactor;
+	@Value(value = "${kafka.topic2}")
+	private String topic2;
+	@Value(value = "${kafka.topic.numPartitions2}")
+	private String numPartitions2;
+	@Value(value = "${kafka.topic.replicationFactor2}")
+	private String replicationFactor2;
 
 	@Bean
 	public KafkaAdmin kafkaAdmin() {
@@ -53,6 +59,10 @@ public class KafkaConfig {
 	@Bean
 	public NewTopic topic1() {
 		return new NewTopic(topic, Integer.parseInt(numPartitions), Short.parseShort(replicationFactor));
+	}
+	@Bean
+	public NewTopic topic2() {
+		return new NewTopic(topic2, Integer.parseInt(numPartitions2), Short.parseShort(replicationFactor2));
 	}
 
 

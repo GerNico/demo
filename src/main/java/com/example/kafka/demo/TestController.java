@@ -35,7 +35,7 @@ public class TestController {
 		System.out.println("Received plain String Message : " + message);
 	}
 
-	@KafkaListener(topics = "my_topic", groupId = "groupId", containerFactory = "greetingKafkaListenerContainerFactory")
+	@KafkaListener(topics = "my_topic2", groupId = "groupId2", containerFactory = "greetingKafkaListenerContainerFactory")
 	public void listenGroupFoo(DtoExample message) {
 		System.out.println("Received dto Message: " + message);
 	}

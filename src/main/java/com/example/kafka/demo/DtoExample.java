@@ -1,6 +1,6 @@
 package com.example.kafka.demo;
 
-import java.util.StringJoiner;
+import java.util.UUID;
 
 /**
  * Class DtoExample that responsible for
@@ -11,36 +11,41 @@ import java.util.StringJoiner;
 public class DtoExample {
 	private String msg;
 	private String name;
+	private Integer num;
+	private UUID id;
 
-	public DtoExample(String msg, String name) {
-		this.msg = msg;
-		this.name = name;
+	public DtoExample() {
 	}
 
 	public String getMsg() {
 		return msg;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public DtoExample() {
-	}
-
 	public void setMsg(String msg) {
 		this.msg = msg;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
 	}
 
-	@Override
-	public String toString() {
-		return new StringJoiner(", ", DtoExample.class.getSimpleName() + "[", "]")
-				.add("msg='" + msg + "'")
-				.add("name='" + name + "'")
-				.toString();
+	public Integer getNum() {
+		return num;
+	}
+
+	public void setNum(Integer num) {
+		this.num = num;
+	}
+
+	public UUID getId() {
+		return id;
+	}
+
+	public void setId(UUID id) {
+		this.id = id;
 	}
 }
