@@ -1,5 +1,6 @@
 package com.example.kafka.demo;
 
+import java.util.StringJoiner;
 import java.util.UUID;
 
 /**
@@ -47,5 +48,15 @@ public class DtoExample {
 
 	public void setId(UUID id) {
 		this.id = id;
+	}
+
+	@Override
+	public String toString() {
+		return new StringJoiner(", ", DtoExample.class.getSimpleName() + "[", "]")
+				.add("msg='" + msg + "'")
+				.add("name='" + name + "'")
+				.add("num=" + num)
+				.add("id=" + id)
+				.toString();
 	}
 }

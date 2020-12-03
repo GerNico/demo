@@ -27,7 +27,7 @@ public class TestController {
 
 	@PostMapping("/publish/dto")
 	public void publishMessage(@RequestBody DtoExample message) {
-		greetingKafkaTemplate.send("my_topic", message);
+		greetingKafkaTemplate.send("my_topic2", message);
 	}
 
 	@KafkaListener(topics = "my_topic", groupId = "groupId")
