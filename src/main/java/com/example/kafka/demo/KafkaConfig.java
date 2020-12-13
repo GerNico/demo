@@ -14,6 +14,8 @@ import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.kafka.transaction.KafkaTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -27,6 +29,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
  * @since 5.0
  */
 @Configuration
+@EnableTransactionManagement
 public class KafkaConfig {
 
 	@Value(value = "${kafka.bootstrapAddress}")
@@ -55,6 +58,7 @@ public class KafkaConfig {
 	public NewTopic topic1() {
 		return new NewTopic(topic, Integer.parseInt(numPartitions), Short.parseShort(replicationFactor));
 	}
+
 	@Bean
 	public NewTopic topic2() {
 		return new NewTopic(topic2, Integer.parseInt(numPartitions2), Short.parseShort(replicationFactor2));
@@ -67,7 +71,15 @@ public class KafkaConfig {
 		configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
 		configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		return new DefaultKafkaProducerFactory<>(configProps);
+		DefaultKafkaProducerFactory<String, String> factory = new DefaultKafkaProducerFactory<>(configProps);
+		factory.transactionCapable();
+		factory.setTransactionIdPrefix("tran-");
+		return factory;
+	}
+
+	@Bean
+	public KafkaTransactionManager<String,String> transactionManager() {
+		return new KafkaTransactionManager<>(producerFactory());
 	}
 
 	@Bean

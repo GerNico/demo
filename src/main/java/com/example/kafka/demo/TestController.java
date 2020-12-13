@@ -24,14 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class TestController {
 	@Autowired
-	private KafkaTemplate<String, String> kafkaTemplate;
-	@Autowired
 	private KafkaTemplate<String, DtoExample> greetingKafkaTemplate;
-
-	@PostMapping("/publish")
-	public void publishMessage(@RequestBody String message) {
-		kafkaTemplate.send("my_topic", message);
-	}
+	@Autowired
+	private TransactionalService transactionalService;
 
 	@PostMapping("/publish/dto")
 	public void publishMessage(@RequestBody DtoExample message) {
@@ -59,5 +54,15 @@ public class TestController {
 	@KafkaListener(topics = "my_topic2", groupId = "groupId2", containerFactory = "greetingKafkaListenerContainerFactory")
 	public void listenGroupFoo(@Payload(required = false) DtoExample message, @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key) {
 		System.out.println("Received dto Message: key =" + key + " value=" + message);
+	}
+
+	@PostMapping("/publishTransaction/fail/{key}")
+	public void failToPublishMessage(@PathVariable String key, @RequestBody String message) {
+		transactionalService.failToWriteTransaction(key, message);
+	}
+
+	@PostMapping("/publishTransaction/success/{key}")
+	public void succeedToPublishMessage(@PathVariable String key, @RequestBody String message) {
+		transactionalService.successToWriteTransaction(key, message);
 	}
 }
