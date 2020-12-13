@@ -65,4 +65,9 @@ public class TestController {
 	public void succeedToPublishMessage(@PathVariable String key, @RequestBody String message) {
 		transactionalService.successToWriteTransaction(key, message);
 	}
+
+	@PostMapping("/combinedTransaction/success/{key}")
+	public void combinedTransactionToPublishMessage(@PathVariable String key, @RequestBody String message) {
+		transactionalService.combinedTransaction(key, message);
+	}
 }
