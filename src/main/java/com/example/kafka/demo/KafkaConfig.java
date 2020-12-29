@@ -14,15 +14,16 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.kafka.transaction.ChainedKafkaTransactionManager;
 import org.springframework.kafka.transaction.KafkaTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 /**
@@ -43,12 +44,16 @@ public class KafkaConfig {
 	private String numPartitions;
 	@Value(value = "${kafka.topic.replicationFactor}")
 	private String replicationFactor;
-	@Value(value = "${kafka.topic2}")
-	private String topic2;
-	@Value(value = "${kafka.topic.numPartitions2}")
-	private String numPartitions2;
-	@Value(value = "${kafka.topic.replicationFactor2}")
-	private String replicationFactor2;
+	@Value(value = "${kafka.producer.keystore}")
+	private String producerKeystore;
+	@Value(value = "${kafka.producer.truststore}")
+	private String producerTruststore;
+	@Value(value = "${kafka.producer.keystore.password}")
+	private String keystorePassword;
+	@Value(value = "${kafka.producer.key.password}")
+	private String keyPassword;
+	@Value(value = "${kafka.producer.truststore.password}")
+	private String truststorePassword;
 
 	@Bean
 	public KafkaAdmin kafkaAdmin() {
@@ -63,17 +68,17 @@ public class KafkaConfig {
 	}
 
 	@Bean
-	public NewTopic topic2() {
-		return new NewTopic(topic2, Integer.parseInt(numPartitions2), Short.parseShort(replicationFactor2));
-	}
-
-
-	@Bean
 	public ProducerFactory<String, String> producerFactory() {
 		Map<String, Object> configProps = new HashMap<>();
 		configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
 		configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 		configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		configProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+		configProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, producerKeystore);
+		configProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, keystorePassword);
+		configProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG,keyPassword);
+		configProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, producerTruststore);
+		configProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, truststorePassword);
 		DefaultKafkaProducerFactory<String, String> factory = new DefaultKafkaProducerFactory<>(configProps);
 		factory.transactionCapable();
 		factory.setTransactionIdPrefix("tran-");
@@ -101,19 +106,5 @@ public class KafkaConfig {
 	@Bean
 	public KafkaTemplate<String, String> kafkaTemplate() {
 		return new KafkaTemplate<>(producerFactory());
-	}
-
-	@Bean
-	public ProducerFactory<String, DtoExample> greetingProducerFactory() {
-		Map<String, Object> configProps = new HashMap<>();
-		configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
-		configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-		configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-		return new DefaultKafkaProducerFactory<>(configProps);
-	}
-
-	@Bean
-	public KafkaTemplate<String, DtoExample> greetingKafkaTemplate() {
-		return new KafkaTemplate<>(greetingProducerFactory());
 	}
 }
