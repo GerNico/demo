@@ -19,7 +19,7 @@ public class TestController {
 	private TransactionalService transactionalService;
 
 
-	@KafkaListener(topics = "my_topic", groupId = "groupId")
+	@KafkaListener(topics = "sasl-tsl-topic", groupId = "main")
 	public void listenGroupFoo(String message) {
 		System.out.println("Received plain String Message : " + message);
 	}
@@ -32,10 +32,5 @@ public class TestController {
 	@PostMapping("/publishTransaction/success/{key}")
 	public void succeedToPublishMessage(@PathVariable String key, @RequestBody String message) {
 		transactionalService.successToWriteTransaction(key, message);
-	}
-
-	@PostMapping("/combinedTransaction/success/{key}")
-	public void combinedTransactionToPublishMessage(@PathVariable String key, @RequestBody String message) {
-		transactionalService.combinedTransaction(key, message);
 	}
 }
