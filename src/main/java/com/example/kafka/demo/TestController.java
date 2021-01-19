@@ -2,6 +2,10 @@ package com.example.kafka.demo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,21 +20,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class TestController {
 	@Autowired
-	private TransactionalService transactionalService;
+	private KafkaTemplate<String, String> kafkaTemplate;
 
-
-	@KafkaListener(topics = "sasl-tsl-topic", groupId = "main")
+	@KafkaListener(topics = "my-new-topic", groupId = "sasl.scram.consumer",containerFactory = "greetingKafkaListenerContainerFactory")
 	public void listenGroupFoo(String message) {
 		System.out.println("Received plain String Message : " + message);
 	}
 
-	@PostMapping("/publishTransaction/fail/{key}")
-	public void failToPublishMessage(@PathVariable String key, @RequestBody String message) {
-		transactionalService.failToWriteTransaction(key, message);
-	}
-
 	@PostMapping("/publishTransaction/success/{key}")
 	public void succeedToPublishMessage(@PathVariable String key, @RequestBody String message) {
-		transactionalService.successToWriteTransaction(key, message);
+		kafkaTemplate.send("my-new-topic", key, message);
+		System.out.println("successful commit of message with key " + key);
 	}
 }
