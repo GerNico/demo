@@ -211,3 +211,29 @@ services:
       KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
 
       KAFKA_OPTS: "-Djava.security.auth.login.config=/kafka/security/kafka_jaas.conf"
+
+      # connect to docker for each docker create sasl user and password
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.3
+    container_name: elasticsearch
+    ports:
+      - 19200:9200
+    environment:
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+      discovery.type: "single-node"
+      xpack.license.self_generated.type: "basic" # basic
+      xpack.security.enabled: "true"
+      xpack.security.ssl.enabled: "true"
+      xpack.security.ssl.verification_mode: certificate
+      xpack.security.ssl.keystore.path: /usr/share/elasticsearch/config/consumer.keystore.jks
+      xpack.security.ssl.keystore.password: password
+      xpack.security.ssl.keystore.key_password: password
+      xpack.security.ssl.truststore.path: /usr/share/elasticsearch/config/consumer.truststore.jks
+      xpack.security.ssl.truststore.password: password
+      #enter docker run bin/elasticsearch-setup-passwords interactive to create users passwords
+
+    volumes:
+      - ./data/container_data/elasticserarch:/usr/share/elasticsearch/data
+      - ./security/keystore/consumer.keystore.jks:/usr/share/elasticsearch/config/consumer.keystore.jks
+      - ./security/truststore/consumer.truststore.jks:/usr/share/elasticsearch/config/consumer.truststore.jks
