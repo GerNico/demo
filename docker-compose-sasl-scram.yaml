@@ -224,16 +224,59 @@ services:
       discovery.type: "single-node"
       xpack.license.self_generated.type: "basic" # basic
       xpack.security.enabled: "true"
-      xpack.security.ssl.enabled: "true"
-      xpack.security.ssl.verification_mode: certificate
-      xpack.security.ssl.keystore.path: /usr/share/elasticsearch/config/consumer.keystore.jks
-      xpack.security.ssl.keystore.password: password
-      xpack.security.ssl.keystore.key_password: password
-      xpack.security.ssl.truststore.path: /usr/share/elasticsearch/config/consumer.truststore.jks
-      xpack.security.ssl.truststore.password: password
+      xpack.security.http.ssl.enabled: "true"
+      xpack.security.http.ssl.keystore.path: /usr/share/elasticsearch/config/consumer.keystore.jks
+      xpack.security.http.ssl.keystore.password: password
+      xpack.security.http.ssl.keystore.key_password: password
+      xpack.security.http.ssl.truststore.path: /usr/share/elasticsearch/config/consumer.truststore.jks
+      xpack.security.http.ssl.truststore.password: password
       #enter docker run bin/elasticsearch-setup-passwords interactive to create users passwords
 
     volumes:
       - ./data/container_data/elasticserarch:/usr/share/elasticsearch/data
       - ./security/keystore/consumer.keystore.jks:/usr/share/elasticsearch/config/consumer.keystore.jks
       - ./security/truststore/consumer.truststore.jks:/usr/share/elasticsearch/config/consumer.truststore.jks
+
+
+  kafka-connect:
+    image: confluentinc/cp-kafka-connect:5.3.0
+    container_name: kafka-connect
+    depends_on:
+      - zookeeper-1
+      - broker-2
+    ports:
+      - 28083:8083
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: SASL_SSL://broker-2:9192
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: kafka-connect
+      CONNECT_CONFIG_STORAGE_TOPIC: _kafka-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _kafka-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _kafka-connect-status
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect-01"
+      ELASTIC_SECURITY_PROTOCOL: SSL
+      ELASTIC_HTTPS_SSL_KEYSTORE_LOCATION: /kafka/security/consumer.keystore.jks
+      ELASTIC_HTTPS_SSL_KEYSTORE_PASSWORD: password
+      ELASTIC_HTTPS_SSL_KEY_PASSWORD: password
+      ELASTIC_HTTPS_SSL_TRUSTSTORE_LOCATION: /kafka/security/consumer.truststore.jks
+      ELASTIC_HTTPS_SSL_TRUSTSTORE_PASSWORD: password
+      SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
+      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+      CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/kafka/security/kafka_jaas.conf"
+
+    volumes:
+      - ./security/keystore/consumer.keystore.jks:/kafka/security/consumer.keystore.jks
+      - ./security/truststore/consumer.truststore.jks:/kafka/security/consumer.truststore.jks
+      - ./security/authentication/sasl_scram/broker_jaas_scram.conf:/kafka/security/kafka_jaas.conf
