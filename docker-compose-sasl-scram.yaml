@@ -122,7 +122,7 @@ services:
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
       KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
-
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
       KAFKA_OPTS: "-Djava.security.auth.login.config=/kafka/security/kafka_jaas.conf"
 
 
@@ -166,7 +166,7 @@ services:
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
       KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
-
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
       KAFKA_OPTS: "-Djava.security.auth.login.config=/kafka/security/kafka_jaas.conf"
 
   broker-3:
@@ -209,7 +209,7 @@ services:
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
       KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
-
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
       KAFKA_OPTS: "-Djava.security.auth.login.config=/kafka/security/kafka_jaas.conf"
 
       # connect to docker for each docker create sasl user and password
@@ -241,13 +241,14 @@ services:
   kafka-connect:
     image: confluentinc/cp-kafka-connect:5.3.0
     container_name: kafka-connect
-    depends_on:
-      - zookeeper-1
-      - broker-2
+    hostname: kafka-connect
     ports:
-      - 28083:8083
+      - 8083:8083
+    volumes:
+      - ./security/truststore/consumer.truststore.jks:/kafka/security/consumer.truststore.jks
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: SASL_SSL://broker-2:9192
+      GROUP_ID: "1"
+      CONNECT_BOOTSTRAP_SERVERS: broker-2:9192,broker-2:9292
       CONNECT_REST_PORT: 8083
       CONNECT_GROUP_ID: kafka-connect
       CONNECT_CONFIG_STORAGE_TOPIC: _kafka-connect-configs
@@ -260,13 +261,6 @@ services:
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect-01"
-      ELASTIC_SECURITY_PROTOCOL: SSL
-      ELASTIC_HTTPS_SSL_KEYSTORE_LOCATION: /kafka/security/consumer.keystore.jks
-      ELASTIC_HTTPS_SSL_KEYSTORE_PASSWORD: password
-      ELASTIC_HTTPS_SSL_KEY_PASSWORD: password
-      ELASTIC_HTTPS_SSL_TRUSTSTORE_LOCATION: /kafka/security/consumer.truststore.jks
-      ELASTIC_HTTPS_SSL_TRUSTSTORE_PASSWORD: password
-      SECURITY_PROTOCOL: SASL_SSL
       CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
       CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
@@ -274,9 +268,23 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
-      KAFKA_OPTS: "-Djava.security.auth.login.config=/kafka/security/kafka_jaas.conf"
 
-    volumes:
-      - ./security/keystore/consumer.keystore.jks:/kafka/security/consumer.keystore.jks
-      - ./security/truststore/consumer.truststore.jks:/kafka/security/consumer.truststore.jks
-      - ./security/authentication/sasl_scram/broker_jaas_scram.conf:/kafka/security/kafka_jaas.conf
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /kafka/security/consumer.truststore.jks
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: password
+      CONNECT_SASL_MECHANISM: SCRAM-SHA-256
+      CONNECT_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="consumer" password="consumer-secret";
+
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_LOCATION: /kafka/security/consumer.truststore.jks
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_PASSWORD: password
+      CONNECT_PRODUCER_SASL_MECHANISM: SCRAM-SHA-256
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_PRODUCER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="consumer" password="consumer-secret";
+
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /kafka/security/consumer.truststore.jks
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: password
+      CONNECT_CONSUMER_SASL_MECHANISM: SCRAM-SHA-256
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_SSL
+      CONNECT_CONSUMER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="consumer" password="consumer-secret";
+
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All # Principal / None
