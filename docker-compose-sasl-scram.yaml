@@ -248,7 +248,7 @@ services:
       - ./security/truststore/consumer.truststore.jks:/kafka/security/consumer.truststore.jks
     environment:
       GROUP_ID: "1"
-      CONNECT_BOOTSTRAP_SERVERS: broker-2:9192,broker-2:9292
+      CONNECT_BOOTSTRAP_SERVERS: PLAIN_SASL_SSL://broker-3:9293,SCRAM_SASL_SSL://broker-3:9393
       CONNECT_REST_PORT: 8083
       CONNECT_GROUP_ID: kafka-connect
       CONNECT_CONFIG_STORAGE_TOPIC: _kafka-connect-configs
@@ -262,12 +262,6 @@ services:
       CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect-01"
       CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
-      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
-      CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
-      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
 
       CONNECT_SSL_TRUSTSTORE_LOCATION: /kafka/security/consumer.truststore.jks
       CONNECT_SSL_TRUSTSTORE_PASSWORD: password
