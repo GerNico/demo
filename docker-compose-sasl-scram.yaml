@@ -213,22 +213,24 @@ services:
 
       # connect to docker for each docker create sasl user and password
 
-  elasticsearch:
+  consumer:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.8.3
-    container_name: elasticsearch
+    container_name: consumer
     ports:
-      - 19200:9200
+      - 9200:9200
     environment:
       ES_JAVA_OPTS: "-Xms1g -Xmx1g"
       discovery.type: "single-node"
       xpack.license.self_generated.type: "basic" # basic
       xpack.security.enabled: "true"
       xpack.security.http.ssl.enabled: "true"
+      xpack.security.transport.ssl.enabled: "true"
       xpack.security.http.ssl.keystore.path: /usr/share/elasticsearch/config/consumer.keystore.jks
       xpack.security.http.ssl.keystore.password: password
       xpack.security.http.ssl.keystore.key_password: password
       xpack.security.http.ssl.truststore.path: /usr/share/elasticsearch/config/consumer.truststore.jks
       xpack.security.http.ssl.truststore.password: password
+      ELASTIC_PASSWORD: "password"
       #enter docker run bin/elasticsearch-setup-passwords interactive to create users passwords
 
     volumes:
@@ -244,6 +246,8 @@ services:
       - 8083:8083
     volumes:
       - ./security/truststore/consumer.truststore.jks:/kafka/security/consumer.truststore.jks
+      - ./security/keystore/consumer.keystore.jks:/kafka/security/consumer.keystore.jks
+
     environment:
       GROUP_ID: "1"
       CONNECT_BOOTSTRAP_SERVERS: PLAIN_SASL_SSL://broker-3:9293,SCRAM_SASL_SSL://broker-3:9393
@@ -263,6 +267,10 @@ services:
 
       CONNECT_SSL_TRUSTSTORE_LOCATION: /kafka/security/consumer.truststore.jks
       CONNECT_SSL_TRUSTSTORE_PASSWORD: password
+      CONNECT_SSL_KEYSTORE_LOCATION: /kafka/security/consumer.keystore.jks
+      CONNECT_SSL_KEYSTORE_PASSWORD: password
+      CONNECT_SSL_KEY_PASSWORD: password
+
       CONNECT_SASL_MECHANISM: SCRAM-SHA-256
       CONNECT_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="consumer" password="consumer-secret";
@@ -272,6 +280,9 @@ services:
       CONNECT_PRODUCER_SASL_MECHANISM: SCRAM-SHA-256
       CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_PRODUCER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="consumer" password="consumer-secret";
+      CONNECT_PRODUCER_SSL_KEYSTORE_LOCATION: /kafka/security/consumer.keystore.jks
+      CONNECT_PRODUCER_SSL_KEYSTORE_PASSWORD: password
+      CONNECT_PRODUCER_SSL_KEY_PASSWORD: password
 
       CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /kafka/security/consumer.truststore.jks
       CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: password
@@ -279,5 +290,8 @@ services:
       CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_CONSUMER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="consumer" password="consumer-secret";
       CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /kafka/security/consumer.keystore.jks
+      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: password
+      CONNECT_CONSUMER_SSL_KEY_PASSWORD: password
 
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All # Principal / None
